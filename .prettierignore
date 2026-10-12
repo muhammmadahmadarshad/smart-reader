@@ -1,0 +1,8 @@
+node_modules
+dist
+.pnpm-store
+pnpm-lock.yaml
+apps/web/public/pdfjs
+artifacts
+test-results
+playwright-report

@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+allowBuilds:
+  '@nestjs/core': true
+  esbuild: true
+  '@parcel/watcher': false
+  '@scarf/scarf': false
+  unrs-resolver: false
