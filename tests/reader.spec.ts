@@ -21,7 +21,7 @@ test('text PDF: selection, navigation, zoom, outline, search, bookmarks and rest
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   const signup = await page.request.post('/api/auth/signup', {
-    headers: { Origin: 'http://localhost:5173', 'X-Kevnex-Request': '1' },
+    headers: { Origin: 'http://localhost:5184', 'X-Kevnex-Request': '1' },
     data: { email: `reader-${Date.now()}@example.com`, password: 'A secure reader passphrase!' },
   });
   expect(signup.ok()).toBeTruthy();
@@ -125,7 +125,7 @@ test('scanned and 500-page documents render one page; search is progressive and 
 }) => {
   test.setTimeout(120000);
   const signup = await page.request.post('/api/auth/signup', {
-    headers: { Origin: 'http://localhost:5173', 'X-Kevnex-Request': '1' },
+    headers: { Origin: 'http://localhost:5184', 'X-Kevnex-Request': '1' },
     data: { email: `large-${Date.now()}@example.com`, password: 'A secure reader passphrase!' },
   });
   expect(signup.ok()).toBeTruthy();

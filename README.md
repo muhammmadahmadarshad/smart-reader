@@ -22,9 +22,9 @@ The initial MinIO image build downloads and compiles its pinned upstream source 
 
 | Service                         | Address                             |
 | ------------------------------- | ----------------------------------- |
-| Smart Reader                          | http://localhost:5173               |
-| API documentation               | http://localhost:3000/api/docs      |
-| OpenAPI JSON                    | http://localhost:3000/api/docs-json |
+| Smart Reader                          | http://localhost:5184               |
+| API documentation               | http://localhost:3014/api/docs      |
+| OpenAPI JSON                    | http://localhost:3014/api/docs-json |
 | Email preview (password resets) | http://localhost:8025               |
 | MinIO console                   | http://localhost:9001               |
 | PostgreSQL                      | localhost:5433                      |

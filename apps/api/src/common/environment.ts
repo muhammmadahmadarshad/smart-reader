@@ -17,7 +17,7 @@ export function validateEnvironment(env: Record<string, unknown>) {
   for (const [name, defaultValue, max] of [
     ['MAX_UPLOAD_MB', 50, 500],
     ['SESSION_DAYS', 7, 30],
-    ['PORT', 3000, 65535],
+    ['PORT', 3014, 65535],
     ['SMTP_PORT', 1025, 65535],
   ] as const) {
     const value = Number(env[name] ?? defaultValue);

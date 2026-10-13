@@ -30,7 +30,7 @@ test('signup, refresh, profile logout and protected navigation', async ({ page }
   const detail = await fetch(`http://localhost:8025/api/v1/message/${mail.ID}`).then((r) =>
     r.json(),
   );
-  const link = detail.Text.match(/http:\/\/localhost:5173\/reset-password#token=[a-f0-9]+/)[0];
+  const link = detail.Text.match(/http:\/\/localhost:5184\/reset-password#token=[a-f0-9]+/)[0];
   await page.goto(link);
   await page.getByLabel('Password', { exact: true }).fill('A newly remembered passphrase!');
   await page.getByRole('button', { name: 'Save new password' }).click();

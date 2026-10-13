@@ -16,7 +16,7 @@ async function bootstrap() {
       .build(),
   );
   SwaggerModule.setup('api/docs', app, document);
-  await app.listen(Number(app.get(ConfigService).get('PORT', '3000')), '0.0.0.0');
+  await app.listen(Number(app.get(ConfigService).get('PORT', '3014')), '0.0.0.0');
 }
 bootstrap().catch((error: unknown) => {
   console.error(error);

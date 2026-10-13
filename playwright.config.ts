@@ -4,7 +4,7 @@ export default defineConfig({
   timeout: 60000,
   workers: 1,
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:5184',
     headless: true,
     actionTimeout: 10000,
     screenshot: 'only-on-failure',
@@ -13,13 +13,13 @@ export default defineConfig({
   webServer: [
     {
       command: 'pnpm dev:backend',
-      url: 'http://localhost:3000/api/docs-json',
+      url: 'http://localhost:3014/api/docs-json',
       reuseExistingServer: !process.env.CI,
       timeout: 120000,
     },
     {
       command: 'pnpm dev:frontend',
-      url: 'http://localhost:5173',
+      url: 'http://localhost:5184',
       reuseExistingServer: !process.env.CI,
       timeout: 120000,
     },
