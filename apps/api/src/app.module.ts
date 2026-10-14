@@ -8,7 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { BooksModule } from './books/books.module';
 import { ReadingProgressModule } from './reading-progress/reading-progress.module';
 import { BookmarksModule } from './bookmarks/bookmarks.module';
-import { HighlightsModule } from './highlights/highlights.module';
+import { AnnotationsModule } from './annotations/annotations.module';
 import { validateEnvironment } from './common/environment';
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import { validateEnvironment } from './common/environment';
     BooksModule,
     ReadingProgressModule,
     BookmarksModule,
-    HighlightsModule,
+    AnnotationsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

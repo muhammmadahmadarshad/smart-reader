@@ -2,7 +2,7 @@
 
 A private PDF library and reading workspace. React + TypeScript + Vite + Ant Design, NestJS, PostgreSQL with TypeORM migrations, and private S3-compatible storage.
 
-Implemented: email/password authentication and resets; a private, searchable PDF library; and a dedicated PDF.js reader with page navigation, zoom, text selection/search, real document outlines, bookmarks, and saved reading position. See [verification and limitations](docs/verification.md).
+Implemented: email/password authentication and resets; a private, searchable PDF library; and a dedicated PDF.js reader with page navigation, zoom, text selection/search, real document outlines, bookmarks, saved reading position, persistent colored highlights, attached notes and standalone book notes. See [verification and limitations](docs/verification.md).
 
 ## Start locally
 
@@ -22,7 +22,7 @@ The initial MinIO image build downloads and compiles its pinned upstream source 
 
 | Service                         | Address                             |
 | ------------------------------- | ----------------------------------- |
-| Smart Reader                          | http://localhost:5184               |
+| Smart Reader                    | http://localhost:5184               |
 | API documentation               | http://localhost:3014/api/docs      |
 | OpenAPI JSON                    | http://localhost:3014/api/docs-json |
 | Email preview (password resets) | http://localhost:8025               |
@@ -47,6 +47,7 @@ apps/api/src/
   storage/            Private S3 storage
   reading-progress/   Reading position
   bookmarks/          Page bookmarks
+  annotations/        Versioned highlights and personal notes
   database/           Connection configuration and migrations
 infra/minio/          Reproducible local MinIO container
 tests/                Browser workflow tests
@@ -87,7 +88,7 @@ pnpm test
 pnpm test:ui
 ```
 
-Generated fixtures live under ignored `artifacts/fixtures`: a text PDF with outline, an image-only scanned PDF, a 500-page PDF, and a corrupt PDF. Browser screenshots and traces are written to ignored artifacts/test-result folders. Development servers can remain running while browser tests reuse them.
+Generated fixtures live under ignored `artifacts/fixtures`: a multiline text PDF with outline, multicolumn and rotated/mixed-size PDFs, an image-only scanned PDF, a 500-page PDF, and a corrupt PDF. Browser screenshots and traces are written to ignored artifacts/test-result folders. Development servers can remain running while browser tests reuse them.
 
 ## Deployment configuration
 
@@ -99,6 +100,8 @@ The default upload maximum is 50 MB (`MAX_UPLOAD_MB`); align the reverse proxy's
 
 Open a title in your library. Use the page arrows, enter a page number, or use the left/right arrow keys outside form controls. Choose fit-to-width, fit-to-page, or a zoom level from the toolbar. Open the side panel for bookmarks and text search; an Outline tab appears only when the PDF actually contains one. Search is submitted with Enter or Find; use the match arrows or result rows to navigate.
 
-Drag across text, then click **Highlight selection** in the reader toolbar to save a warm-yellow highlight. Highlights persist when you reopen the book and scale with zoom. Click **Saved highlights** to review or remove highlights on the current page; navigate pages to see their highlights. Highlights belong to your account and are stored separately from the original PDF.
+Drag across PDF text to open the contextual toolbar. Choose Yellow, Sage, Peach, or Rose and save a highlight or attach a plain-text note. **Notes and highlights** opens the searchable, filterable book-wide panel; page references return to the original passage. **New book note** works without a selection, including on scanned pages. Editing uses explicit Save/Cancel, retry feedback, and conflict recovery. Notes are limited to 5,000 characters. Deleting an attached note can keep its highlight.
 
-Scanned pages remain viewable but have no selectable text without OCR. Highlighting was added as an explicitly requested extension to the original three phases. Notes, PDF export with highlights, OCR, and AI are not implemented. Reading position saves after a short pause and is flushed when returning to the library.
+The single-page reader limits text selections to the current page. Scanned pages have no selectable text without OCR. PDF export, OCR, AI and sharing remain out of scope. Reading position saves after a short pause and is flushed when returning to the library.
+
+See [Phase 4 API, coordinates, migrations and verification](docs/annotations.md). This repository uses TypeORM rather than Prisma; Phase 4 retains its versioned migrations. Existing highlights are migrated without losing their saved positions. Apply migrations before starting the updated API.

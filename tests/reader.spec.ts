@@ -1,8 +1,9 @@
 import { test, expect, Page } from '@playwright/test';
+import { createTestAccount, uploadFixture } from './upload-fixture';
 
 async function upload(page: Page, name: string) {
   await page.getByRole('button', { name: /Add a book/ }).click();
-  await page.locator('input[type=file]').setInputFiles(`artifacts/fixtures/${name}.pdf`);
+  await uploadFixture(page, `artifacts/fixtures/${name}.pdf`);
   await expect(page.getByRole('link', { name, exact: true })).toBeVisible({ timeout: 30000 });
   await page.getByRole('link', { name, exact: true }).click();
   await expect(page.locator('.react-pdf__Page canvas')).toBeVisible({ timeout: 30000 });
@@ -20,11 +21,7 @@ test('text PDF: selection, navigation, zoom, outline, search, bookmarks and rest
   test.setTimeout(120000);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  const signup = await page.request.post('/api/auth/signup', {
-    headers: { Origin: 'http://localhost:5184', 'X-Kevnex-Request': '1' },
-    data: { email: `reader-${Date.now()}@example.com`, password: 'A secure reader passphrase!' },
-  });
-  expect(signup.ok()).toBeTruthy();
+  await createTestAccount(page, `reader-${Date.now()}@example.com`, 'A secure reader passphrase!');
   await page.goto('/library');
   await upload(page, 'text');
   await expect(page.locator('.react-pdf__Page')).toHaveCount(1);
@@ -40,6 +37,9 @@ test('text PDF: selection, navigation, zoom, outline, search, bookmarks and rest
   await page.mouse.move(bounds.x + bounds.width - 1, bounds.y + bounds.height / 2, {
     steps: 15,
   });
+  await expect(page.getByRole('button', { name: 'Highlight selection', exact: true })).toHaveCount(
+    0,
+  );
   await page.mouse.up();
   const selected = await page.evaluate(() => window.getSelection()?.toString());
   expect(selected).toContain('A quiet forest');
@@ -52,11 +52,11 @@ test('text PDF: selection, navigation, zoom, outline, search, bookmarks and rest
   await expect
     .poll(async () => (await page.locator('.saved-highlight').first().boundingBox())!.width)
     .toBeGreaterThan(highlightRect!.width);
-  await page.getByRole('button', { name: 'Saved highlights', exact: true }).click();
+  await page.getByRole('button', { name: 'Notes and highlights', exact: true }).click();
   await expect(page.getByRole('tabpanel')).toContainText('A quiet forest');
   await page.screenshot({ path: 'artifacts/reader-highlights.png', fullPage: true });
-  await page.getByRole('button', { name: /Remove highlight A quiet forest/ }).click();
-  await page.getByRole('button', { name: 'Remove', exact: true }).click();
+  await page.getByRole('button', { name: /Delete annotation A quiet forest/ }).click();
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await expect(page.locator('.saved-highlight')).toHaveCount(0);
   await page.getByRole('button', { name: 'Close side panel', exact: true }).click();
   await page.evaluate(() => window.getSelection()?.removeAllRanges());
@@ -124,11 +124,7 @@ test('scanned and 500-page documents render one page; search is progressive and 
   page,
 }) => {
   test.setTimeout(120000);
-  const signup = await page.request.post('/api/auth/signup', {
-    headers: { Origin: 'http://localhost:5184', 'X-Kevnex-Request': '1' },
-    data: { email: `large-${Date.now()}@example.com`, password: 'A secure reader passphrase!' },
-  });
-  expect(signup.ok()).toBeTruthy();
+  await createTestAccount(page, `large-${Date.now()}@example.com`, 'A secure reader passphrase!');
   await page.goto('/library');
   await upload(page, 'scanned');
   await expect(page.getByText('No selectable text on this page', { exact: true })).toBeVisible();

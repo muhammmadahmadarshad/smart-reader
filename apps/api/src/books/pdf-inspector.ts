@@ -22,14 +22,29 @@ export function validateUpload(
 }
 
 // Parse untrusted PDFs away from the HTTP event loop, with bounded execution time.
-export function inspectPdf(buffer: Buffer): Promise<number> {
+export type PdfMetadata = { pages: number; boxes: number[][] };
+export function inspectPdf(buffer: Buffer): Promise<PdfMetadata> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(
       `
       const { parentPort, workerData } = require('node:worker_threads');
       (async () => {
         const { PDFDocument } = require(workerData.module);
-        try { const pdf = await PDFDocument.load(new Uint8Array(workerData.data), { updateMetadata: false, throwOnInvalidObject: true }); parentPort.postMessage({ pages: pdf.getPageCount() }); }
+        try {
+          const pdf = await PDFDocument.load(new Uint8Array(workerData.data), {
+            updateMetadata: false, throwOnInvalidObject: true,
+          });
+          const boxes = pdf.getPages().map(page => {
+            const media = page.getMediaBox(), crop = page.getCropBox();
+            const x = Math.max(media.x, crop.x), y = Math.max(media.y, crop.y);
+            const right = Math.min(media.x + media.width, crop.x + crop.width);
+            const top = Math.min(media.y + media.height, crop.y + crop.height);
+            return right > x && top > y
+              ? [x, y, right, top]
+              : [media.x, media.y, media.x + media.width, media.y + media.height];
+          });
+          parentPort.postMessage({ pages: pdf.getPageCount(), boxes });
+        }
         catch (error) { parentPort.postMessage({ error: /encrypted/i.test(error.message) ? 'EncryptedPDFError' : error.name }); }
       })().catch(() => parentPort.postMessage({ error: 'InvalidPDFException' }));
     `,
@@ -51,9 +66,10 @@ export function inspectPdf(buffer: Buffer): Promise<number> {
       clearTimeout(timer);
       void worker.terminate();
     };
-    worker.once('message', (result: { pages?: number; error?: string }) => {
+    worker.once('message', (result: { pages?: number; boxes?: number[][]; error?: string }) => {
       finish();
-      if (result.pages && result.pages > 0) resolve(result.pages);
+      if (result.pages && result.pages > 0 && result.boxes)
+        resolve({ pages: result.pages, boxes: result.boxes });
       else
         reject(
           new BadRequestException(

@@ -490,3 +490,56 @@ a:hover {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.annotation-preview {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 8px 0;
+}
+.annotation-quote {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 180px;
+  overflow: auto;
+  padding: 12px;
+  background: #f6f3ec;
+  margin: 12px 0;
+}
+.annotation-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #62685f;
+  border-radius: 3px;
+}
+.annotation-entry .ant-space {
+  display: flex;
+  margin-top: 8px;
+}
+.annotation-status {
+  margin: 24px 0 12px;
+}
+.annotation-emphasis {
+  outline: 3px solid #35654d;
+  animation: annotation-pulse 700ms ease-in-out 3;
+}
+@keyframes annotation-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .annotation-emphasis {
+    animation: none;
+  }
+}
+.ant-modal-body label[for='annotation-note'] {
+  display: block;
+  margin: 16px 0 8px;
+}
+.ant-popover {
+  max-width: calc(100vw - 16px);
+}

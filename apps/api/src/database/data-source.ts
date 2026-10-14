@@ -7,10 +7,20 @@ import { Book } from '../books/entities/book.entity';
 import { ReadingProgress } from '../reading-progress/entities/reading-progress.entity';
 import { Bookmark } from '../bookmarks/entities/bookmark.entity';
 import { Highlight } from '../highlights/entities/highlight.entity';
+import { Annotation } from '../annotations/entities/annotation.entity';
 export const databaseOptions: DataSourceOptions = {
   type: 'postgres',
   url: process.env.DATABASE_URL,
-  entities: [User, Session, PasswordResetToken, Book, ReadingProgress, Bookmark, Highlight],
+  entities: [
+    User,
+    Session,
+    PasswordResetToken,
+    Book,
+    ReadingProgress,
+    Bookmark,
+    Highlight,
+    Annotation,
+  ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   synchronize: false,
   migrationsRun: false,

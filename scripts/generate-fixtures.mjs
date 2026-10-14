@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb, PDFName, PDFString } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb, PDFName, PDFString, degrees } from 'pdf-lib';
 import { chromium } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 await mkdir('artifacts/fixtures', { recursive: true });
@@ -44,6 +44,28 @@ async function textPdf(count, name) {
 }
 await textPdf(3, 'text');
 await textPdf(500, 'large');
+for (const name of ['multicolumn', 'rotated']) {
+  const doc = await PDFDocument.create();
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  for (let index = 0; index < 4; index++) {
+    const p = doc.addPage(index % 2 ? [700, 500] : [595, 842]);
+    if (name === 'rotated') {
+      p.setRotation(degrees(index * 90));
+      if (index === 2) p.setCropBox(20, 30, 550, 780);
+    }
+    const top = p.getHeight() - 70;
+    for (let line = 0; line < 9; line++) {
+      p.drawText(`Left column passage ${line + 1}`, { x: 45, y: top - line * 26, size: 12, font });
+      p.drawText(`Right column passage ${line + 1}`, {
+        x: 325,
+        y: top - line * 26,
+        size: 12,
+        font,
+      });
+    }
+  }
+  await writeFile(`artifacts/fixtures/${name}.pdf`, await doc.save());
+}
 const browser = await chromium.launch();
 const page = await browser.newPage();
 const png = await page.evaluate(() => {

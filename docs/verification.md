@@ -8,7 +8,13 @@
 
 The final ORM is **TypeORM**, per the revised requirement. Entities, DTOs and types are colocated within their feature modules. PostgreSQL is on host port **5433**. The initial versioned migration creates all six entities, ownership indexes, uniqueness constraints, and cascading foreign keys. The pnpm lockfile pins resolved dependencies.
 
-## Checks
+## Phase 4
+
+See [Phase 4 review, verification and limitations](annotations.md). Colored highlights, attached and standalone notes, book-wide filtering/pagination, retry protection and edit conflicts are now implemented. The historical checks below describe the earlier phases.
+
+Final Phase 4 checks: **20 backend tests and 11 Chromium browser tests passed**. Both production builds and repository-wide Prettier checks passed. Versioned migrations are applied locally. Screenshots for multiline text, multicolumn, rotated/cropped and scanned PDFs were visually inspected, including the mobile Drawer. The implementation retains the repository's existing TypeORM layer; it does not introduce Prisma.
+
+## Earlier checks
 
 Original three-phase verification: **14 backend integration tests and 4 browser workflows passed**, along with both production builds and a frozen-lockfile install. PostgreSQL, MinIO, Mailpit, and both development servers were left running.
 
@@ -27,8 +33,8 @@ Screenshots are under ignored `artifacts/`; reproducible fixture generation and 
 
 ## Limits and deliberate scope boundaries
 
-- Saved text highlights are implemented as a requested scope extension. The side panel lists the current page's highlights. Notes, color selection, embedding/exporting highlights into the PDF, OCR, AI, sharing, payments and administration are not implemented.
-- Scanned pages can be viewed and bookmarked but cannot be text-searched without OCR. Password-protected files are rejected with an unlock-copy message. PDFs that fail the metadata parser must be repaired or replaced before upload.
+- Phase 4 supersedes the earlier restrictions on highlights and notes. The annotation panel covers the whole book; notes and four highlight colors are implemented. PDF export, OCR, AI, sharing, payments and administration remain out of scope.
+- Scanned pages can be viewed, bookmarked and annotated with standalone notes, but cannot be highlighted or text-searched without OCR. Password-protected files are rejected with an unlock-copy message. PDFs that fail the metadata parser must be repaired or replaced before upload.
 - Search is case-insensitive plain text and limited to 1,000 displayed matches. It does not perform OCR, fuzzy matching, or cross-page phrase matching. PDF text extraction quality depends on the document’s encoding and reading order.
 - The viewer is a single-page reader, not continuous scrolling. Fonts, character maps and PDF worker assets are served locally.
 - Progress writes on page hiding are best effort; offline or abruptly terminated browsers can lose the most recent unsaved change. Explicit return-to-library waits for the latest save and surfaces failures.

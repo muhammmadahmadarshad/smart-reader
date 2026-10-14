@@ -15,9 +15,24 @@ import helmet from 'helmet';
 export class ApiErrorFilter implements ExceptionFilter {
   catch(error: unknown, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse<Response>();
-    const status = error instanceof HttpException ? error.getStatus() : 500;
+    const parserType = (error as { type?: string })?.type;
+    const status =
+      error instanceof HttpException
+        ? error.getStatus()
+        : parserType === 'entity.too.large'
+          ? 413
+          : parserType === 'entity.parse.failed'
+            ? 400
+            : 500;
     const body = error instanceof HttpException ? error.getResponse() : null;
-    const message = typeof body === 'string' ? body : (body as { message?: unknown })?.message;
+    const message =
+      parserType === 'entity.too.large'
+        ? 'Request body exceeds the 100 KB JSON limit.'
+        : parserType === 'entity.parse.failed'
+          ? 'Malformed JSON body.'
+          : typeof body === 'string'
+            ? body
+            : (body as { message?: unknown })?.message;
     if (status === 500) Logger.error(error, 'API');
     response
       .status(status)

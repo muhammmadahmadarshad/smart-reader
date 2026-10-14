@@ -1,6 +1,6 @@
 # Smart Reader implementation decisions
 
-- Saved text highlights are a user-requested extension. The Highlights module owns its entity, DTO and geometry type. The second migration adds an ownership-indexed table with composite foreign keys and cascade deletion. Highlight rectangles use normalized coordinates relative to the PDF page (excluding viewer padding), so zoom/resizing preserve alignment. Only current-page highlights are fetched and rendered; the overlay does not intercept text selection. Selected text is rendered as plain text, never HTML. Each selection is limited to 10,000 characters and 500 rectangles.
+- Phase 4 annotations own versioned highlights and personal notes. New geometry uses PDF coordinates and immutable uploaded-book references; old normalized highlights are migrated read-compatibly. See [annotation coordinates, API and reliability](annotations.md).
 
 - One NestJS API and one React SPA in a pnpm workspace. There are no microservices.
 - Each backend feature owns its `entities`, `dto`, and `types` directories. TypeORM connection configuration and versioned migrations live under `database`. `synchronize` is disabled.

@@ -23,6 +23,7 @@ export class Book {
   @Column({ unique: true, select: false }) objectKey!: string;
   @Column('integer') size!: number;
   @Column({ type: 'integer', nullable: true }) pageCount!: number | null;
+  @Column({ type: 'jsonb', nullable: true }) pageBoxes!: number[][] | null;
   @Column({ type: 'varchar', default: 'UPLOADING', length: 16 }) status!: BookStatus;
   @CreateDateColumn({ type: 'timestamptz' }) createdAt!: Date;
   @UpdateDateColumn({ type: 'timestamptz' }) updatedAt!: Date;

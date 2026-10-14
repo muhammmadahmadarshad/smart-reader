@@ -18,7 +18,6 @@ import {
 import {
   ArrowLeftOutlined,
   BookOutlined,
-  HighlightOutlined,
   LeftOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -32,14 +31,13 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import type { DataNode } from 'antd/es/tree';
 import { api } from '../api';
-import { colors } from '../theme';
 import type { Book } from '../books/types';
 import type { Bookmark, TextSelection } from './types';
 import { readTextSelection } from './selection';
 import { useReadingProgress } from './useReadingProgress';
 import BookmarksPanel from './BookmarksPanel';
 import SearchPanel from './SearchPanel';
-import HighlightsPanel, { useHighlights } from './HighlightsPanel';
+import { useAnnotationTools } from './Annotations';
 import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 
@@ -114,27 +112,20 @@ export function Reader({
   const [noText, setNoText] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [selectedText, setSelectedText] = useState<TextSelection | null>(null);
-  const highlights = useHighlights(book.id, page);
-  const saveHighlight = useMutation({
-    mutationFn: (selected: TextSelection) =>
-      api(`/books/${book.id}/highlights`, {
-        method: 'POST',
-        body: JSON.stringify({
-          page: selected.page,
-          text: selected.text,
-          rectangles: selected.rectangles,
-        }),
-      }),
-    onSuccess: () => {
-      void query.invalidateQueries({ queryKey: ['highlights', book.id] });
-      setSelectedText(null);
-      window.getSelection()?.removeAllRanges();
-      message.success('Highlight saved.');
-    },
-    onError: (failure) => message.error(failure.message),
-  });
+  const [pdfPage, setPdfPage] = useState<PDFPageProxy | null>(null);
+  const [renderedPage, setRenderedPage] = useState(0);
+  // React-PDF rebuilds its text layer when this callback changes, invalidating native selections.
+  const textLayerRendered = useCallback(() => setRenderedPage(page), [page]);
+  const pageRenderFailed = useCallback(
+    () =>
+      setError(
+        'This page could not be rendered. Try reopening the book or uploading another copy.',
+      ),
+    [],
+  );
   const viewport = useRef<HTMLDivElement>(null);
   const selectionArea = useRef<HTMLDivElement>(null);
+  const selecting = useRef(false);
   const progress = useReadingProgress(book.id, page, !!pdf && !error);
   const file = useMemo(
     () => ({ url: `/api/books/${book.id}/file`, withCredentials: true }),
@@ -211,6 +202,7 @@ export function Reader({
         return;
       }
       setPage(number);
+      if (number !== page) setRenderedPage(0);
       setDraftPage(number);
       viewport.current?.scrollTo({ top: 0, left: 0 });
     },
@@ -220,8 +212,19 @@ export function Reader({
     go(number);
     if (!desktop) setPanel(false);
   };
+  const clearSelection = useCallback(() => setSelectedText(null), []);
+  const annotations = useAnnotationTools({
+    bookId: book.id,
+    page,
+    pdfPage: renderedPage === page ? pdfPage : null,
+    selected: selectedText,
+    clearSelection,
+    onPage: sidebarGo,
+    container: selectionArea,
+  });
   useEffect(() => {
     const keyboard = (event: KeyboardEvent) => {
+      if (annotations.editorOpen) return;
       const element = event.target as HTMLElement;
       if (
         ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(element.tagName) ||
@@ -243,7 +246,7 @@ export function Reader({
     };
     window.addEventListener('keydown', keyboard);
     return () => window.removeEventListener('keydown', keyboard);
-  }, [pdf, page, go]);
+  }, [pdf, page, go, annotations.editorOpen]);
   const scale =
     typeof zoom === 'number'
       ? zoom
@@ -293,7 +296,7 @@ export function Reader({
   }
   function selection() {
     const element = selectionArea.current?.querySelector<HTMLElement>('.react-pdf__Page');
-    const value = element ? readTextSelection(element, book.id, page) : null;
+    const value = element && pdfPage ? readTextSelection(element, book.id, page, pdfPage) : null;
     setSelectedText(value);
     if (value) onTextSelection?.(value);
   }
@@ -304,13 +307,26 @@ export function Reader({
   useEffect(() => {
     // Native touch selection can finish after pointer-up.
     const changed = () => {
+      if (selecting.current) return;
       const element = selectionArea.current?.querySelector<HTMLElement>('.react-pdf__Page');
-      const value = element ? readTextSelection(element, book.id, page) : null;
+      const value = element && pdfPage ? readTextSelection(element, book.id, page, pdfPage) : null;
       if (value) setSelectedText(value);
+      else if (!window.getSelection()?.isCollapsed) setSelectedText(null);
+    };
+    const finished = () => {
+      if (!selecting.current) return;
+      selecting.current = false;
+      changed();
     };
     document.addEventListener('selectionchange', changed);
-    return () => document.removeEventListener('selectionchange', changed);
-  }, [book.id, page]);
+    document.addEventListener('pointerup', finished);
+    document.addEventListener('pointercancel', finished);
+    return () => {
+      document.removeEventListener('selectionchange', changed);
+      document.removeEventListener('pointerup', finished);
+      document.removeEventListener('pointercancel', finished);
+    };
+  }, [book.id, page, pdfPage]);
   const panels = (
     <Tabs
       activeKey={tab}
@@ -319,8 +335,8 @@ export function Reader({
       items={[
         {
           key: 'highlights',
-          label: 'Highlights',
-          children: <HighlightsPanel bookId={book.id} page={page} />,
+          label: 'Notes',
+          children: annotations.panel,
         },
         {
           key: 'bookmarks',
@@ -445,36 +461,20 @@ export function Reader({
         </div>
       </div>
       <div className="highlight-toolbar">
-        <Tooltip
-          title={
-            noText ? 'This page has no selectable text' : 'Select text on the PDF to highlight it'
-          }
-        >
-          <Button
-            icon={<HighlightOutlined />}
-            aria-label="Highlight selection"
-            disabled={!selectedText || selectedText.page !== page}
-            loading={saveHighlight.isPending}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => selectedText && saveHighlight.mutate(selectedText)}
-          >
-            Highlight selection
-          </Button>
-        </Tooltip>
+        {annotations.toolbar}
         <Button
           onClick={() => {
             setTab('highlights');
             setPanel(true);
           }}
         >
-          Saved highlights
+          Notes and highlights
         </Button>
         <Typography.Text type="secondary" className="highlight-hint">
-          {selectedText
-            ? 'Text selected — ready to save.'
-            : 'Drag across text to highlight a passage.'}
+          Select text on this page to highlight or add a note.
         </Typography.Text>
       </div>
+      {annotations.dialog}
       {progress.status.startsWith('Could not') && (
         <Alert
           type="warning"
@@ -517,13 +517,18 @@ export function Reader({
                   type="info"
                   showIcon
                   message="No selectable text on this page"
-                  description="This may be a scanned page. You can read and bookmark it, but selecting or searching its text requires OCR, which is not available."
+                  description="This may be a scanned page. You can read, bookmark, and add standalone book notes. Highlighting and text search need a text layer; OCR is not available."
                 />
               )}
               <div
                 className="pdf-page-container"
                 ref={selectionArea}
+                onPointerDown={() => {
+                  selecting.current = true;
+                  setSelectedText(null);
+                }}
                 onMouseUp={selection}
+                onClick={annotations.hitTest}
                 onKeyUp={selection}
               >
                 <Document
@@ -563,41 +568,22 @@ export function Reader({
                       scale={scale}
                       devicePixelRatio={Math.min(window.devicePixelRatio || 1, 2)}
                       renderTextLayer
+                      onRenderTextLayerSuccess={textLayerRendered}
                       renderAnnotationLayer
                       renderForms={false}
                       onLoadSuccess={(loaded: PDFPageProxy) => {
+                        setPdfPage(loaded);
                         const size = loaded.getViewport({ scale: 1 });
                         setPageSize({ width: size.width, height: size.height });
                       }}
-                      onRenderError={() =>
-                        setError(
-                          'This page could not be rendered. Try reopening the book or uploading another copy.',
-                        )
-                      }
+                      onRenderError={pageRenderFailed}
                       loading={
                         <div className="pdf-loading">
                           <Spin />
                         </div>
                       }
                     >
-                      <div className="highlight-overlay" aria-hidden="true">
-                        {highlights.data?.flatMap((highlight) =>
-                          highlight.rectangles.map((rect, index) => (
-                            <span
-                              className="saved-highlight"
-                              key={`${highlight.id}-${index}`}
-                              data-highlight-id={highlight.id}
-                              style={{
-                                background: colors.highlight,
-                                left: `${rect.x * 100}%`,
-                                top: `${rect.y * 100}%`,
-                                width: `${rect.width * 100}%`,
-                                height: `${rect.height * 100}%`,
-                              }}
-                            />
-                          )),
-                        )}
-                      </div>
+                      {annotations.overlay}
                     </Page>
                   )}
                 </Document>

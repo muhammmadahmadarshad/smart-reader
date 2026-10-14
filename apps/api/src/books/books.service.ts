@@ -99,7 +99,7 @@ export class BooksService implements OnModuleInit, OnModuleDestroy {
   }
   async upload(userId: string, file: Express.Multer.File | undefined) {
     validateUpload(file, this.maxBytes);
-    const pageCount = await inspectPdf(file.buffer);
+    const metadata = await inspectPdf(file.buffer);
     const title =
       file.originalname
         .replace(/\.pdf$/i, '')
@@ -111,7 +111,8 @@ export class BooksService implements OnModuleInit, OnModuleDestroy {
         userId,
         title,
         size: file.size,
-        pageCount,
+        pageCount: metadata.pages,
+        pageBoxes: metadata.boxes,
         objectKey: `${randomUUID()}/${randomUUID()}.pdf`,
         status: 'UPLOADING',
       }),
@@ -137,6 +138,14 @@ export class BooksService implements OnModuleInit, OnModuleDestroy {
     await this.owned(userId, id, true);
     await this.repo.update({ id, userId, status: 'READY' }, { title });
     return this.get(userId, id);
+  }
+  async geometry(book: Book) {
+    if (book.pageBoxes) return book.pageBoxes;
+    const object = await this.storage.get(book.objectKey);
+    const data = await object.Body!.transformToByteArray();
+    const metadata = await inspectPdf(Buffer.from(data));
+    await this.repo.update(book.id, { pageBoxes: metadata.boxes });
+    return metadata.boxes;
   }
   async remove(userId: string, id: string) {
     const book = await this.owned(userId, id);

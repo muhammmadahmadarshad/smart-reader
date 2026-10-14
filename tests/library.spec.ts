@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { uploadFixture } from './upload-fixture';
 test('upload, grid/list, search, rename, private file opening and delete', async ({ page }) => {
   await page.goto('/signup');
   await page.getByLabel('Email address').fill(`library-${Date.now()}@example.com`);
@@ -6,7 +7,7 @@ test('upload, grid/list, search, rename, private file opening and delete', async
   await page.getByRole('button', { name: 'Create account', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'My library' })).toBeVisible();
   await page.getByRole('button', { name: /Add a book/ }).click();
-  await page.locator('input[type=file]').setInputFiles('artifacts/fixtures/text.pdf');
+  await uploadFixture(page, 'artifacts/fixtures/text.pdf');
   await expect(page.getByRole('link', { name: 'text', exact: true })).toBeVisible({
     timeout: 30000,
   });

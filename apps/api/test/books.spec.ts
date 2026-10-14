@@ -180,38 +180,6 @@ describe('Private library with PostgreSQL and MinIO', () => {
       db.getRepository(Bookmark).save({ userId: other, bookId: id, page: 1, label: 'Forbidden' }),
     ).rejects.toThrow();
   });
-  it('persists highlights, validates geometry and enforces ownership', async () => {
-    const payload = {
-      page: 1,
-      text: 'A quiet forest',
-      rectangles: [{ x: 0.1, y: 0.1, width: 0.4, height: 0.03 }],
-    };
-    const path = `/books/${id}/highlights`;
-    const saved = (await req('post', path).send(payload).expect(201)).body;
-    expect((await req('get', `${path}?page=1`).expect(200)).body[0]).toMatchObject(payload);
-    expect((await req('get', `${path}?page=2`).expect(200)).body).toHaveLength(0);
-    for (const invalid of [
-      { ...payload, page: 4 },
-      { ...payload, text: ' ' },
-      { ...payload, rectangles: [] },
-      { ...payload, rectangles: [{ x: 0.9, y: 0, width: 0.2, height: 0.1 }] },
-      { ...payload, rectangles: [{ x: -0.1, y: 0, width: 0.2, height: 0.1 }] },
-      { ...payload, rectangles: [{ x: 0, y: 0, width: 0, height: 0.1 }] },
-      { ...payload, userId: other },
-    ])
-      await req('post', path).send(invalid).expect(400);
-    await req('get', `${path}?page=0`).expect(400);
-    await req('get', `${path}?page=1`, otherCookie).expect(404);
-    await req('post', path, otherCookie).send(payload).expect(404);
-    await req('delete', `${path}/${saved.id}`, otherCookie).expect(404);
-    await request(app.getHttpServer()).get(`/api${path}?page=1`).expect(401);
-    await expect(
-      db.getRepository(Highlight).save({ ...payload, userId: other, bookId: id }),
-    ).rejects.toThrow();
-    await req('delete', `${path}/${saved.id}`).expect(200);
-    expect((await req('get', `${path}?page=1`).expect(200)).body).toHaveLength(0);
-    await req('post', path).send(payload).expect(201);
-  });
   it('compensates failed uploads and retains retryable records when deletion fails', async () => {
     const put = jest.spyOn(storage, 'put').mockRejectedValueOnce(new Error('storage unavailable'));
     await req('post', '/books')
