@@ -12,6 +12,7 @@ import { AuthService } from '../src/auth/auth.service';
 import { User } from '../src/users/entities/user.entity';
 import { BooksService } from '../src/books/books.service';
 import { Annotation } from '../src/annotations/entities/annotation.entity';
+import { ReadingContextService } from '../src/ai/reading-context.service';
 describe('Annotations: PostgreSQL authorization, validation and concurrency', () => {
   let app: INestApplication, db: DataSource, books: BooksService;
   let owner: string,
@@ -127,6 +128,40 @@ describe('Annotations: PostgreSQL authorization, validation and concurrency', ()
         firstPage: 1,
       } as Partial<Annotation>),
     ).rejects.toThrow();
+  });
+  it('prepares context using real owner-scoped repositories and exposes only authenticated disabled capabilities', async () => {
+    const builder = app.get(ReadingContextService);
+    const input = {
+      bookId: book,
+      documentVersion: book,
+      selectedText: highlight().selectedText,
+      pages: { first: 1, last: 1 },
+      annotationId: id,
+      action: 'EXPLAIN' as const,
+      language: 'ur',
+    };
+    const context = await builder.prepare(owner, input);
+    expect(context.bookExcerpts[0]).toMatchObject({
+      verifiedDocumentText: false,
+      source: { bookId: book, annotationId: id, sourceTitle: 'annotations' },
+    });
+    await expect(builder.prepare(other, input)).rejects.toThrow('Book not found');
+    await expect(
+      builder.prepare(owner, { ...input, bookId: second, documentVersion: second }),
+    ).rejects.toThrow('Annotation not found');
+    await request(app.getHttpServer()).get('/api/ai/capabilities').expect(401);
+    expect((await req('get', '/ai/capabilities').expect(200)).body).toEqual({
+      generation: false,
+      streaming: false,
+      embeddings: false,
+      retrieval: false,
+      reason: 'PHASE_5_DISABLED',
+    });
+    for (const route of ['/ai/generate', '/ai/retrieve', '/ai/index'])
+      await req('post', route).send({}).expect(404);
+    expect(await db.query("SELECT extversion FROM pg_extension WHERE extname = 'vector'")).toEqual([
+      { extversion: expect.any(String) },
+    ]);
   });
   it('rejects malformed, excessive, nonfinite and out-of-page geometry and text', async () => {
     const valid = highlight();

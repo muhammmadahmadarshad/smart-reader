@@ -1,4 +1,6 @@
+import { readAiConfig } from '../ai/ai.config';
 export function validateEnvironment(env: Record<string, unknown>) {
+  readAiConfig(env);
   const required = [
     'DATABASE_URL',
     'SESSION_SECRET',

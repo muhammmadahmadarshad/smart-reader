@@ -14,7 +14,15 @@ See [Phase 4 review, verification and limitations](annotations.md). Colored high
 
 Final Phase 4 checks: **20 backend tests and 11 Chromium browser tests passed**. Both production builds and repository-wide Prettier checks passed. Versioned migrations are applied locally. Screenshots for multiline text, multicolumn, rotated/cropped and scanned PDFs were visually inspected, including the mobile Drawer. The implementation retains the repository's existing TypeORM layer; it does not introduce Prisma.
 
-## Earlier checks
+## Phase 5
+
+The [AI and RAG foundation](ai-foundation.md) adds disabled adapters, ownership-checked context preparation, deterministic chunking, internal LangGraph workflows, LangChain Core dependencies, safe capability reporting and a pgvector extension migration. TypeORM remains the only ORM. All user-facing AI/RAG functionality stays inactive; tracing, models, embeddings, indexing and vector searches are disabled.
+
+Verification: **61 backend tests (40 focused offline AI tests) and 12 Chromium browser tests passed**, including existing reading and annotation regressions and the absence of AI controls. TypeScript checks and both production builds passed. pgvector 0.8.1 was built and enabled locally without replacing application data. The browser run reported a duplicate API-server port warning while using the running server; all workflows passed. Vite retains its existing large-bundle advisory.
+
+There is no separate notebook implementation to test or extend. Its integration point, missing-source behavior, future persistence schema, authorization rules and Phase 6 request controls are documented. No unused conversation, usage, chunk or vector tables were added.
+
+## Earlier checks (Phases 1–3)
 
 Original three-phase verification: **14 backend integration tests and 4 browser workflows passed**, along with both production builds and a frozen-lockfile install. PostgreSQL, MinIO, Mailpit, and both development servers were left running.
 

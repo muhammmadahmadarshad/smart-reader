@@ -7,5 +7,6 @@ import { AnnotationsService } from './annotations.service';
   imports: [AuthModule, BooksModule],
   controllers: [AnnotationsController],
   providers: [AnnotationsService],
+  exports: [AnnotationsService],
 })
 export class AnnotationsModule {}

@@ -4,6 +4,8 @@ A private PDF library and reading workspace. React + TypeScript + Vite + Ant Des
 
 Implemented: email/password authentication and resets; a private, searchable PDF library; and a dedicated PDF.js reader with page navigation, zoom, text selection/search, real document outlines, bookmarks, saved reading position, persistent colored highlights, attached notes and standalone book notes. See [verification and limitations](docs/verification.md).
 
+Phase 5 adds an internal [AI and RAG foundation](docs/ai-foundation.md): disabled provider adapters, bounded context, deterministic chunking, LangChain/LangGraph workflow boundaries and PostgreSQL pgvector extension support. AI and RAG remain unavailable to users; no models, embeddings, indexing or vector searches run.
+
 ## Start locally
 
 Requirements: Node.js 24, pnpm 11.13.0, Docker Desktop with Linux containers.
@@ -18,7 +20,7 @@ pnpm dev
 
 The environment setup generates local passwords and a session secret, preserving existing `.env` files. Alternatively, copy `.env.example`, `apps/api/.env.example`, and `apps/web/.env.example` to their `.env` equivalents and replace the placeholders. Keep database and storage credentials consistent between the root and API configuration.
 
-The initial MinIO image build downloads and compiles its pinned upstream source and may take several minutes; subsequent starts reuse the image.
+The initial MinIO and pgvector-enabled PostgreSQL image builds download and compile pinned upstream sources and may take several minutes; subsequent starts reuse the images. The pgvector migration only enables the extension and preserves existing data. Hosted databases may require administrator setup; see the Phase 5 document.
 
 | Service                         | Address                             |
 | ------------------------------- | ----------------------------------- |

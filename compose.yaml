@@ -1,7 +1,8 @@
 name: kevnex
 services:
   postgres:
-    image: postgres:17-alpine
+    build: ./infra/postgres
+    image: kevnex-postgres:17-pgvector-0.8.1
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-kevnex}

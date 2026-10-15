@@ -10,6 +10,7 @@ import { ReadingProgressModule } from './reading-progress/reading-progress.modul
 import { BookmarksModule } from './bookmarks/bookmarks.module';
 import { AnnotationsModule } from './annotations/annotations.module';
 import { validateEnvironment } from './common/environment';
+import { AiModule } from './ai/ai.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnvironment }),
@@ -20,6 +21,7 @@ import { validateEnvironment } from './common/environment';
     ReadingProgressModule,
     BookmarksModule,
     AnnotationsModule,
+    AiModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
