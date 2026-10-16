@@ -78,6 +78,7 @@ test('text PDF: selection, navigation, zoom, outline, search, bookmarks and rest
   await page.getByRole('button', { name: 'Bookmark this page', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Page bookmarked', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Open side panel', exact: true }).click();
+  await page.getByRole('tab', { name: 'Navigate', exact: true }).click();
   await page.getByRole('tab', { name: 'Bookmarks', exact: true }).click();
   await page.getByRole('button', { name: 'Rename bookmark Page 2' }).click();
   await page.getByLabel('Bookmark name').fill('Return to the forest');

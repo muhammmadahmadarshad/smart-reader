@@ -1,5 +1,7 @@
 # Smart Reader implementation decisions
 
+- Phase 6 uses project-owned OpenAI embeddings, user-owned encrypted LLM connections, LangChain adapters and explicit LangGraph workflows. PostgreSQL holds durable indexing leases, versioned chunks/vectors, conversations and atomic usage reservations. Exact pgvector retrieval applies owner/book/version/configuration filters in SQL. See [AI architecture and security](ai-assistant.md).
+
 - Phase 4 annotations own versioned highlights and personal notes. New geometry uses PDF coordinates and immutable uploaded-book references; old normalized highlights are migrated read-compatibly. See [annotation coordinates, API and reliability](annotations.md).
 
 - One NestJS API and one React SPA in a pnpm workspace. There are no microservices.

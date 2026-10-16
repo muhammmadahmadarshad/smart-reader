@@ -1,5 +1,16 @@
 # Delivery report
 
+## Reader UI and performance
+
+See [reader interface changes and code organization](reader-ux.md) for the simplified Notes and
+Assistant workflows, responsive session preservation, and removal of unnecessary rendering and
+network work. Verification includes browser checks for drafts, partial-response cancellation, and
+idle polling, alongside the existing reader and annotation regressions.
+
+## Phase 6
+
+The [AI assistant completion report](phase6-report.md) covers the current implementation and checks. Phase 6 supersedes the inactive AI restrictions in the historical Phase 5 notes below. No live provider credentials were used during implementation.
+
 ## Completed
 
 1. **Foundation and authentication**: responsive Ant Design branding/forms and application shell; normalized email signup; scrypt password hashing; database-backed HTTP-only cookie sessions; login/logout/current-user routes; protected routes and APIs; CSRF origin/header checks; validation and throttling; hashed, expiring, single-use reset tokens; Mailpit reset email preview.
@@ -14,7 +25,15 @@ See [Phase 4 review, verification and limitations](annotations.md). Colored high
 
 Final Phase 4 checks: **20 backend tests and 11 Chromium browser tests passed**. Both production builds and repository-wide Prettier checks passed. Versioned migrations are applied locally. Screenshots for multiline text, multicolumn, rotated/cropped and scanned PDFs were visually inspected, including the mobile Drawer. The implementation retains the repository's existing TypeORM layer; it does not introduce Prisma.
 
-## Earlier checks
+## Phase 5
+
+The [AI and RAG foundation](ai-foundation.md) adds disabled adapters, ownership-checked context preparation, deterministic chunking, internal LangGraph workflows, LangChain Core dependencies, safe capability reporting and a pgvector extension migration. TypeORM remains the only ORM. All user-facing AI/RAG functionality stays inactive; tracing, models, embeddings, indexing and vector searches are disabled.
+
+Verification: **61 backend tests (40 focused offline AI tests) and 12 Chromium browser tests passed**, including existing reading and annotation regressions and the absence of AI controls. TypeScript checks and both production builds passed. pgvector 0.8.1 was built and enabled locally without replacing application data. The browser run reported a duplicate API-server port warning while using the running server; all workflows passed. Vite retains its existing large-bundle advisory.
+
+There is no separate notebook implementation to test or extend. Its integration point, missing-source behavior, future persistence schema, authorization rules and Phase 6 request controls are documented. No unused conversation, usage, chunk or vector tables were added.
+
+## Earlier checks (Phases 1–3)
 
 Original three-phase verification: **14 backend integration tests and 4 browser workflows passed**, along with both production builds and a frozen-lockfile install. PostgreSQL, MinIO, Mailpit, and both development servers were left running.
 
@@ -33,7 +52,7 @@ Screenshots are under ignored `artifacts/`; reproducible fixture generation and 
 
 ## Limits and deliberate scope boundaries
 
-- Phase 4 supersedes the earlier restrictions on highlights and notes. The annotation panel covers the whole book; notes and four highlight colors are implemented. PDF export, OCR, AI, sharing, payments and administration remain out of scope.
+- Phase 4 supersedes the earlier restrictions on highlights and notes. The annotation panel covers the whole book; notes and four highlight colors are implemented. Phase 6 adds scoped AI assistance. PDF export, OCR, sharing, payments and administration remain out of scope.
 - Scanned pages can be viewed, bookmarked and annotated with standalone notes, but cannot be highlighted or text-searched without OCR. Password-protected files are rejected with an unlock-copy message. PDFs that fail the metadata parser must be repaired or replaced before upload.
 - Search is case-insensitive plain text and limited to 1,000 displayed matches. It does not perform OCR, fuzzy matching, or cross-page phrase matching. PDF text extraction quality depends on the document’s encoding and reading order.
 - The viewer is a single-page reader, not continuous scrolling. Fonts, character maps and PDF worker assets are served locally.

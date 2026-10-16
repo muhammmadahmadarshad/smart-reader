@@ -1,4 +1,9 @@
+import { readAiConfig } from '../ai/ai.config';
+import { AssistantConfig } from '../ai/assistant.config';
+import { ConfigService } from '@nestjs/config';
 export function validateEnvironment(env: Record<string, unknown>) {
+  readAiConfig(env);
+  new AssistantConfig(new ConfigService(env));
   const required = [
     'DATABASE_URL',
     'SESSION_SECRET',

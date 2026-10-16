@@ -32,7 +32,7 @@ import {
   SearchOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api';
 import { Book, BookList, formatDate, formatSize } from './types';
 import UploadDialog from './UploadDialog';
@@ -56,6 +56,7 @@ export default function LibraryPage() {
   }, [search]);
   const books = useQuery({
     queryKey: ['books', term, sort, page],
+    placeholderData: keepPreviousData,
     queryFn: () =>
       api<BookList>(
         `/books?${new URLSearchParams({ search: term, sort, page: String(page), pageSize: '12' })}`,
@@ -233,6 +234,7 @@ export default function LibraryPage() {
         <>
           <Typography.Paragraph type="secondary">
             {books.data.total} {books.data.total === 1 ? 'book' : 'books'}
+            {books.isFetching && <span role="status"> · Updating…</span>}
           </Typography.Paragraph>
           {view === 'grid' ? (
             <Row gutter={[24, 24]}>

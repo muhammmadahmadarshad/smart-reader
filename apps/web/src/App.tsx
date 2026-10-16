@@ -6,6 +6,7 @@ import AuthPage from './auth/AuthPage';
 import { ProtectedRoute } from './auth/Auth';
 import Shell from './layout/Shell';
 const ReaderPage = lazy(() => import('./reader/ReaderPage'));
+const AiSettings = lazy(() => import('./ai/AiSettings'));
 export default function App() {
   return (
     <Routes>
@@ -15,6 +16,14 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<Shell />}>
           <Route path="/library" element={<LibraryPage />} />
+          <Route
+            path="/ai-settings"
+            element={
+              <Suspense fallback={<Spin />}>
+                <AiSettings />
+              </Suspense>
+            }
+          />
         </Route>
         <Route
           path="/books/:bookId/read"
