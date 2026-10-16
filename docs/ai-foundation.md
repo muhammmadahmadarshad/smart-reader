@@ -1,5 +1,7 @@
 # Phase 5: internal AI and RAG foundation
 
+**Historical phase document.** Phase 6 supersedes the disabled configuration and persistence proposal below. See [current AI setup and architecture](ai-assistant.md). The disabled adapters and original graph utilities remain available for foundation tests but are not registered in the running application.
+
 Phase 5 adds contracts, bounded context preparation, deterministic supplied-text chunking and two internal LangGraph workflows. It does **not** enable AI for users. There are no model SDK integrations, model calls, embeddings, indexing jobs, vector searches, streaming routes, AI controls, tools, autonomous agents or persistent graph checkpoints. Existing reader and annotation behavior is unchanged. No notebook feature exists in this repository.
 
 ## Responsibilities and code boundaries

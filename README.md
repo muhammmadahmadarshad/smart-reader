@@ -4,7 +4,7 @@ A private PDF library and reading workspace. React + TypeScript + Vite + Ant Des
 
 Implemented: email/password authentication and resets; a private, searchable PDF library; and a dedicated PDF.js reader with page navigation, zoom, text selection/search, real document outlines, bookmarks, saved reading position, persistent colored highlights, attached notes and standalone book notes. See [verification and limitations](docs/verification.md).
 
-Phase 5 adds an internal [AI and RAG foundation](docs/ai-foundation.md): disabled provider adapters, bounded context, deterministic chunking, LangChain/LangGraph workflow boundaries and PostgreSQL pgvector extension support. AI and RAG remain unavailable to users; no models, embeddings, indexing or vector searches run.
+Phase 6 adds an [AI book assistant](docs/ai-assistant.md): encrypted user LLM connections, selection assistance, durable whole-book text indexing, project-managed embeddings, scoped pgvector retrieval, cited answers and saved conversations. Ordinary reading needs no AI credentials. See [setup and architecture](docs/ai-assistant.md), [API documentation](docs/ai-api.md) and the [completion report](docs/phase6-report.md).
 
 ## Start locally
 
@@ -20,7 +20,7 @@ pnpm dev
 
 The environment setup generates local passwords and a session secret, preserving existing `.env` files. Alternatively, copy `.env.example`, `apps/api/.env.example`, and `apps/web/.env.example` to their `.env` equivalents and replace the placeholders. Keep database and storage credentials consistent between the root and API configuration.
 
-The initial MinIO and pgvector-enabled PostgreSQL image builds download and compile pinned upstream sources and may take several minutes; subsequent starts reuse the images. The pgvector migration only enables the extension and preserves existing data. Hosted databases may require administrator setup; see the Phase 5 document.
+The initial MinIO and pgvector-enabled PostgreSQL image builds download and compile pinned upstream sources and may take several minutes; subsequent starts reuse the images. Versioned migrations enable pgvector and add AI tables without replacing reading data. Hosted databases may require an administrator to install/enable the extension. Existing installations can run `node scripts/setup-ai-key.mjs` to configure local credential encryption, then restart the API. A project embedding key and separately validated user LLM connections are needed to activate book Q&A; see the setup guide.
 
 | Service                         | Address                             |
 | ------------------------------- | ----------------------------------- |
@@ -40,6 +40,7 @@ apps/web/src/
   auth/               Login, registration, reset, route protection
   books/              Personal library and uploads
   reader/             PDF rendering, search, outline, bookmarks and progress
+  ai/                 Connection settings, assistant panel and transport contracts
   layout/             Shared application shell
   theme.ts            Shared Ant Design tokens
 apps/api/src/
@@ -50,6 +51,7 @@ apps/api/src/
   reading-progress/   Reading position
   bookmarks/          Page bookmarks
   annotations/        Versioned highlights and personal notes
+  ai/                 Providers, LangGraph workflows, durable indexing and scoped retrieval
   database/           Connection configuration and migrations
 infra/minio/          Reproducible local MinIO container
 tests/                Browser workflow tests
@@ -104,6 +106,6 @@ Open a title in your library. Use the page arrows, enter a page number, or use t
 
 Drag across PDF text to open the contextual toolbar. Choose Yellow, Sage, Peach, or Rose and save a highlight or attach a plain-text note. **Notes and highlights** opens the searchable, filterable book-wide panel; page references return to the original passage. **New book note** works without a selection, including on scanned pages. Editing uses explicit Save/Cancel, retry feedback, and conflict recovery. Notes are limited to 5,000 characters. Deleting an attached note can keep its highlight.
 
-The single-page reader limits text selections to the current page. Scanned pages have no selectable text without OCR. PDF export, OCR, AI and sharing remain out of scope. Reading position saves after a short pause and is flushed when returning to the library.
+The single-page reader limits text selections to the current page. Scanned pages have no selectable text without OCR. PDF export, OCR, full-book AI summaries and sharing remain out of scope. AI answers require checking their cited passages. Reading position saves after a short pause and is flushed when returning to the library.
 
 See [Phase 4 API, coordinates, migrations and verification](docs/annotations.md). This repository uses TypeORM rather than Prisma; Phase 4 retains its versioned migrations. Existing highlights are migrated without losing their saved positions. Apply migrations before starting the updated API.
