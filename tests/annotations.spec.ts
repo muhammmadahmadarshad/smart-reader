@@ -140,6 +140,7 @@ test('failed create response is retried once without duplicates; conflicts prese
 }) => {
   const book = await openBook(page, 'scanned');
   await expect(page.getByText('No selectable text on this page', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Notes and highlights', exact: true }).click();
   await page.getByRole('button', { name: 'New book note', exact: true }).click();
   await page
     .getByRole('textbox', { name: 'Personal note' })
@@ -309,12 +310,11 @@ test('annotation panel searches, filters and paginates a long list', async ({ pa
   await expect(page.locator('.annotation-entry')).toContainText('Notebook entry 21');
   await page.getByRole('searchbox', { name: 'Search annotations' }).fill('');
   await page.getByRole('searchbox', { name: 'Search annotations' }).press('Enter');
+  await page.getByRole('button', { name: 'Filter notes' }).click();
   await page.getByRole('combobox', { name: 'Filter highlight color' }).click();
   await page.getByText('Peach', { exact: true }).click();
   await expect(page.locator('.annotation-entry')).toHaveCount(1);
   await expect(page.locator('.annotation-entry')).toContainText('A quiet forest');
   await page.locator('.ant-segmented').getByText('Notes', { exact: true }).click();
-  await expect(
-    page.getByText('No annotations found. Select a passage or create a book note.'),
-  ).toBeVisible();
+  await expect(page.getByText('No matching notes')).toBeVisible();
 });

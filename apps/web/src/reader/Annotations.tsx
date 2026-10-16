@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type RefObject, type MouseEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type RefObject,
+  type MouseEvent,
+  type ReactNode,
+} from 'react';
 import { Alert, App, Button, Input, Modal, Popover, Space, Typography } from 'antd';
 import { HighlightOutlined } from '@ant-design/icons';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
@@ -7,7 +14,8 @@ import { useBlocker } from 'react-router-dom';
 import { api, ApiError } from '../api';
 import type { Annotation, AnnotationList, TextSelection } from './types';
 import { viewportRectangle } from './selection';
-import AnnotationsPanel, { annotationColors, ColorPicker } from './AnnotationsPanel';
+import AnnotationsPanel from './AnnotationsPanel';
+import { annotationColors, ColorPicker } from './AnnotationColors';
 type Editor = { item?: Annotation; selection?: TextSelection; key: string; initialColor: string };
 export function useAnnotationTools({
   bookId,
@@ -17,6 +25,7 @@ export function useAnnotationTools({
   clearSelection,
   onPage,
   container,
+  aiActions,
 }: {
   bookId: string;
   page: number;
@@ -25,6 +34,7 @@ export function useAnnotationTools({
   clearSelection: () => void;
   onPage: (page: number) => void;
   container: RefObject<HTMLDivElement | null>;
+  aiActions?: ReactNode;
 }) {
   const { message, modal } = App.useApp();
   const query = useQueryClient();
@@ -313,7 +323,7 @@ export function useAnnotationTools({
   const toolbarContent = (
     <Space direction="vertical">
       <ColorPicker value={color} onChange={setColor} disabled={quickSaving || !!quickError} />
-      <Space>
+      <Space wrap>
         <Button
           icon={<HighlightOutlined />}
           aria-label="Highlight selection"
@@ -328,6 +338,7 @@ export function useAnnotationTools({
         >
           Add a note
         </Button>
+        {aiActions}
       </Space>
       {quickError && (
         <Alert
@@ -343,7 +354,6 @@ export function useAnnotationTools({
   );
   const toolbar = (
     <>
-      <Button onClick={() => open()}>New book note</Button>
       {selected && !editor && (
         <Popover
           open

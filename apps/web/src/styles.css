@@ -100,7 +100,8 @@ a:hover {
   min-height: 100dvh;
 }
 .app-header {
-  height: 76px;
+  height: 68px;
+  background: #fffdf8;
   padding: 0 40px;
   display: flex;
   align-items: center;
@@ -156,6 +157,10 @@ a:hover {
   display: flex;
   gap: 12px;
   margin-bottom: 28px;
+  padding: 12px;
+  background: #fffdf8;
+  border: 1px solid #dcddd3;
+  border-radius: 14px;
 }
 .library-toolbar > .ant-input-affix-wrapper {
   max-width: 440px;
@@ -173,6 +178,14 @@ a:hover {
 .book-card {
   height: 100%;
   overflow: hidden;
+  box-shadow: 0 2px 6px #292d2805;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+.book-card:hover {
+  border-color: #9bb29e;
+  box-shadow: 0 6px 18px #292d280d;
 }
 .book-cover {
   position: relative;
@@ -259,7 +272,7 @@ a:hover {
 }
 .reader-header {
   background: #fffdf8;
-  padding: 14px 24px;
+  padding: 8px 20px;
   display: flex;
   gap: 20px;
   align-items: center;
@@ -276,7 +289,7 @@ a:hover {
   font-size: 11px;
 }
 .reader-toolbar {
-  padding: 12px 24px;
+  padding: 8px 20px;
   background: #fffdf8;
   border-bottom: 1px solid #dcddd3;
   display: flex;
@@ -302,18 +315,56 @@ a:hover {
   overflow: hidden;
 }
 .reader-sidebar {
-  width: 340px;
+  width: clamp(360px, 30vw, 420px);
   flex-shrink: 0;
   overflow-y: auto;
   border-right: 1px solid #dcddd3;
-  padding: 0 16px 20px;
+  padding: 0 16px;
   background: #fffdf8;
+}
+.reader-sidebar[hidden] {
+  display: none;
+}
+.reader-sidebar > .ant-tabs,
+.reader-drawer .ant-drawer-body > .ant-tabs {
+  height: 100%;
+}
+.reader-sidebar .ant-tabs-content-holder,
+.reader-drawer .ant-tabs-content-holder {
+  min-height: 0;
+  overflow: hidden;
+}
+.reader-sidebar .ant-tabs-content,
+.reader-drawer .ant-tabs-content {
+  height: 100%;
+}
+.reader-sidebar .ant-tabs-tabpane-active,
+.reader-drawer .ant-tabs-tabpane-active {
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.reader-sidebar .ant-tabs-nav,
+.reader-drawer .ant-tabs-nav {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+.reader-drawer .ant-drawer-body {
+  padding: 0 14px;
+  overflow: hidden;
+}
+.panel-loading {
+  display: grid;
+  place-items: center;
+  min-height: 160px;
 }
 .reading-area {
   flex: 1;
   min-width: 0;
   overflow: auto;
-  background: #faf7ef;
+  background: #eceee8;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 .pdf-page-container {
   width: max-content;
@@ -461,18 +512,6 @@ a:hover {
     flex: 1;
   }
 }
-.highlight-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-bottom: 1px solid #dcddd3;
-  background: #fffdf8;
-}
-.highlight-hint {
-  font-size: 12px;
-}
 .highlight-overlay {
   position: absolute;
   inset: 0;
@@ -542,4 +581,167 @@ a:hover {
 }
 .ant-popover {
   max-width: calc(100vw - 16px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-card {
+    transition: none;
+  }
+}
+@media (max-width: 760px) {
+  .library-toolbar {
+    padding: 10px;
+  }
+}
+
+.reader-workspace-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.reader-sidebar > .ant-tabs > .ant-tabs-nav .ant-tabs-tab {
+  flex: 1;
+  justify-content: center;
+}
+.reader-sidebar > .ant-tabs > .ant-tabs-nav .ant-tabs-nav-list {
+  width: 100%;
+}
+.book-tools-panel {
+  height: 100%;
+}
+.selection-ai-actions .ant-btn {
+  width: 100%;
+  text-align: left;
+}
+.annotations-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.notes-header {
+  padding: 14px 0;
+  border-bottom: 1px solid #e4e7df;
+  flex-shrink: 0;
+}
+.notes-heading,
+.notes-search,
+.annotation-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.notes-heading {
+  margin-bottom: 14px;
+}
+.notes-heading > .ant-typography {
+  font-size: 16px;
+}
+.notes-search > .ant-input-search {
+  flex: 1;
+  min-width: 0;
+}
+.notes-content {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  flex: 1;
+  min-height: 0;
+  padding: 8px 0 16px;
+}
+.notes-content .ant-empty {
+  padding: 32px 12px;
+}
+.notes-content .ant-empty p {
+  font-size: 13px;
+  line-height: 1.7;
+  margin-top: 8px;
+}
+.annotation-filters {
+  width: min(280px, calc(100vw - 56px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.annotation-filters > .ant-typography {
+  font-size: 12px;
+}
+.notes-filter-summary {
+  font-size: 11px;
+  color: #62685f;
+  margin-top: 8px;
+}
+.annotation-entry.ant-list-item {
+  padding: 12px 0;
+  border: 0;
+}
+.annotation-card {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #e0e5dc;
+  border-radius: 12px;
+  background: #fffefa;
+}
+.annotation-card-header {
+  gap: 0;
+}
+.annotation-card-header .annotation-link {
+  min-width: 0;
+  padding: 0;
+  font-size: 12px;
+}
+.annotation-card-actions {
+  display: flex;
+}
+.annotation-card-actions .ant-btn {
+  color: #62685f;
+}
+.annotation-source {
+  border-left: 3px solid #cfe3c6;
+  margin: 12px 0;
+  padding: 4px 0 4px 10px;
+  color: #62685f;
+  font-size: 13px;
+}
+.annotation-personal-note {
+  line-height: 1.7;
+  font-size: 13px;
+}
+.annotation-date {
+  font-size: 11px;
+  color: #62685f;
+}
+@media (max-width: 600px) {
+  .reader-header {
+    gap: 6px;
+    padding: 8px 12px;
+  }
+  .reader-library-button > span:not(.anticon) {
+    display: none;
+  }
+  .reader-library-button {
+    width: 32px;
+    padding: 0;
+  }
+  .reader-workspace-actions .ant-btn {
+    padding-inline: 6px;
+    font-size: 12px;
+  }
+  .reader-workspace-actions .anticon {
+    display: none;
+  }
+  .reader-toolbar {
+    gap: 8px;
+    padding: 8px 12px;
+  }
+  .zoom-controls {
+    margin-left: auto;
+    width: auto;
+  }
+  .zoom-controls .ant-select {
+    width: 108px;
+  }
+  .zoom-controls .ant-btn {
+    display: none;
+  }
 }

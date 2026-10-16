@@ -33,6 +33,7 @@ export default function Shell() {
             items: [
               { key: 'email', label: user?.email, disabled: true },
               { type: 'divider' },
+              { key: 'ai', label: 'AI Settings', onClick: () => navigate('/ai-settings') },
               {
                 key: 'logout',
                 label: 'Log out',
