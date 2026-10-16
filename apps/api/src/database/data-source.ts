@@ -8,6 +8,7 @@ import { ReadingProgress } from '../reading-progress/entities/reading-progress.e
 import { Bookmark } from '../bookmarks/entities/bookmark.entity';
 import { Highlight } from '../highlights/entities/highlight.entity';
 import { Annotation } from '../annotations/entities/annotation.entity';
+import { aiEntities } from '../ai/entities/ai.entities';
 export const databaseOptions: DataSourceOptions = {
   type: 'postgres',
   url: process.env.DATABASE_URL,
@@ -20,6 +21,7 @@ export const databaseOptions: DataSourceOptions = {
     Bookmark,
     Highlight,
     Annotation,
+    ...aiEntities,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   synchronize: false,
