@@ -5,6 +5,7 @@ export const TEXT_STREAMER = Symbol('TEXT_STREAMER');
 export const EMBEDDER = Symbol('EMBEDDER');
 export const PASSAGE_RETRIEVER = Symbol('PASSAGE_RETRIEVER');
 export type GenerationRequest = {
+  connection?: { userId: string; connectionId: string };
   requestId: string;
   model: string;
   applicationInstructions: string;

@@ -3,27 +3,33 @@ import { ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { BooksModule } from '../books/books.module';
 import { AnnotationsModule } from '../annotations/annotations.module';
+import { StorageModule } from '../storage/storage.module';
 import { AI_CONFIG, readAiConfig } from './ai.config';
 import { AiController } from './ai.controller';
 import { ReadingContextService } from './reading-context.service';
-import { DisabledEmbeddings, DisabledGeneration, DisabledRetrieval } from './disabled.providers';
-import { EMBEDDER, PASSAGE_RETRIEVER, TEXT_GENERATOR, TEXT_STREAMER } from './providers';
-import { AI_WORKFLOWS } from './workflows';
-import { LangGraphWorkflows } from './langgraph.workflows';
+import { AssistantConfig } from './assistant.config';
+import { CredentialsService } from './credentials.service';
+import { EndpointPolicy } from './endpoint-policy';
+import { ConnectionsService } from './connections.service';
+import { QuotaService } from './quota.service';
+import { ProjectEmbeddings, PROJECT_EMBEDDER } from './project-embeddings';
+import { UserModelProvider, USER_MODEL } from './user-model.provider';
+import { IndexingService, PdfTextExtractor, PDF_EXTRACTOR } from './indexing.service';
+import { RetrievalService } from './retrieval.service';
+import { AssistantWorkflow } from './assistant-workflow';
+import { ConversationsService } from './conversations.service';
+import { TEXT_GENERATOR, TEXT_STREAMER, EMBEDDER } from './providers';
 @Module({
-  imports: [AuthModule, BooksModule, AnnotationsModule],
+  imports: [AuthModule, BooksModule, AnnotationsModule, StorageModule],
   controllers: [AiController],
   providers: [
     {
       provide: AI_CONFIG,
       inject: [ConfigService],
-      useFactory: (config: ConfigService) =>
+      useFactory: (c: ConfigService) =>
         readAiConfig(
           Object.fromEntries(
             [
-              'AI_ENABLED',
-              'AI_PROVIDER',
-              'RAG_ENABLED',
               'AI_CONTEXT_SELECTION_CHARS',
               'AI_CONTEXT_SURROUNDING_CHARS',
               'AI_CONTEXT_QUESTION_CHARS',
@@ -31,31 +37,33 @@ import { LangGraphWorkflows } from './langgraph.workflows';
               'AI_CONTEXT_TOTAL_CHARS',
               'RAG_CHUNK_CHARS',
               'RAG_CHUNK_OVERLAP_CHARS',
-              'LANGSMITH_TRACING',
-              'LANGCHAIN_TRACING_V2',
-              'LANGCHAIN_TRACING',
-              'LANGCHAIN_VERBOSE',
-            ].map((key) => [key, config.get(key)]),
+            ].map((k) => [k, c.get(k)]),
           ),
         ),
     },
+    AssistantConfig,
+    CredentialsService,
+    EndpointPolicy,
+    ConnectionsService,
+    QuotaService,
     ReadingContextService,
-    DisabledGeneration,
-    DisabledEmbeddings,
-    DisabledRetrieval,
-    { provide: AI_WORKFLOWS, useClass: LangGraphWorkflows },
-    { provide: TEXT_GENERATOR, useExisting: DisabledGeneration },
-    { provide: TEXT_STREAMER, useExisting: DisabledGeneration },
-    { provide: EMBEDDER, useExisting: DisabledEmbeddings },
-    { provide: PASSAGE_RETRIEVER, useExisting: DisabledRetrieval },
+    IndexingService,
+    RetrievalService,
+    AssistantWorkflow,
+    ConversationsService,
+    { provide: PROJECT_EMBEDDER, useClass: ProjectEmbeddings },
+    { provide: USER_MODEL, useClass: UserModelProvider },
+    { provide: PDF_EXTRACTOR, useClass: PdfTextExtractor },
+    { provide: TEXT_GENERATOR, useExisting: USER_MODEL },
+    { provide: TEXT_STREAMER, useExisting: USER_MODEL },
+    { provide: EMBEDDER, useExisting: PROJECT_EMBEDDER },
   ],
   exports: [
     ReadingContextService,
-    TEXT_GENERATOR,
-    TEXT_STREAMER,
-    EMBEDDER,
-    PASSAGE_RETRIEVER,
-    AI_WORKFLOWS,
+    IndexingService,
+    AssistantWorkflow,
+    ConversationsService,
+    ConnectionsService,
   ],
 })
 export class AiModule {}

@@ -82,23 +82,21 @@ describe('Phase 5 offline configuration and adapters', () => {
     expect(readAiConfig({})).toMatchObject({
       enabled: false,
       ragEnabled: false,
-      provider: 'disabled',
+      provider: 'user',
       selectedChars: 10000,
       chunkChars: 1600,
       overlapChars: 200,
     });
   });
   it.each([
-    { AI_ENABLED: 'true' },
-    { RAG_ENABLED: 'true' },
     { AI_PROVIDER: 'openai' },
     { AI_ENABLED: 'yes' },
     { LANGSMITH_TRACING: 'true' },
     { LANGCHAIN_TRACING_V2: 'true' },
     { LANGCHAIN_TRACING: 'true' },
   ])('fails closed for unsupported configuration %j', (env) => {
-    expect(() => readAiConfig(env)).toThrow(/Phase 5|must be disabled/);
-    expect(() => validateEnvironment(env)).toThrow(/Phase 5|must be disabled/);
+    expect(() => readAiConfig(env)).toThrow(/must be|unsupported/);
+    expect(() => validateEnvironment(env)).toThrow(/must be|unsupported/);
   });
   it.each([
     { RAG_CHUNK_CHARS: 2, RAG_CHUNK_OVERLAP_CHARS: 2 },

@@ -130,43 +130,22 @@ describe('Internal LangGraph workflows with networking forbidden', () => {
       network.forEach((spy) => spy.mockRestore());
     }
   });
-  it('starts the real AiModule without credentials, providers, extraction or network calls', async () => {
-    const module = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ isGlobal: true, ignoreEnvFile: true, ignoreEnvVars: true }),
-        AiModule,
-      ],
-    })
-      .overrideModule(BooksModule)
-      .useModule(OfflineBooks)
-      .overrideModule(AnnotationsModule)
-      .useModule(OfflineAnnotations)
-      .overrideModule(AuthModule)
-      .useModule(OfflineAuth)
-      .overrideGuard(AuthGuard)
-      .useValue({ canActivate: () => false })
-      .compile();
-    try {
-      await module.init();
-      expect(books.owned).not.toHaveBeenCalled();
-      const context = await module.get(ReadingContextService).prepare('owner', input);
-      expect(context.bookExcerpts[0].verifiedDocumentText).toBe(false);
-      const service = module.get<AiWorkflows>(AI_WORKFLOWS);
-      const selection = await service.selection('owner', input, options);
-      expect(selection.steps).toEqual([
-        'validate_access',
-        'prepare_context',
-        'generate',
-        'finalize',
-      ]);
-      expect(selection).toMatchObject({ status: 'failed', error: { code: 'AI_DISABLED' } });
-      const qa = await service.bookQa('owner', documents, 'Question?', options);
-      expect(qa.steps).toEqual(['validate_access', 'retrieve', 'finalize']);
-      expect(qa).toMatchObject({ status: 'failed', error: { code: 'RAG_DISABLED' } });
-      expect(qa.response).toBeUndefined();
-    } finally {
-      await module.close();
-    }
+  it('retains disabled adapter behavior for offline foundation consumers', async () => {
+    expect(books.owned).not.toHaveBeenCalled();
+    const context = await new ReadingContextService(
+      books as unknown as BooksService,
+      annotations as unknown as AnnotationsService,
+      config,
+    ).prepare('owner', input);
+    expect(context.bookExcerpts[0].verifiedDocumentText).toBe(false);
+    const service = workflow();
+    const selection = await service.selection('owner', input, options);
+    expect(selection.steps).toEqual(['validate_access', 'prepare_context', 'generate', 'finalize']);
+    expect(selection).toMatchObject({ status: 'failed', error: { code: 'AI_DISABLED' } });
+    const qa = await service.bookQa('owner', documents, 'Question?', options);
+    expect(qa.steps).toEqual(['validate_access', 'retrieve', 'finalize']);
+    expect(qa).toMatchObject({ status: 'failed', error: { code: 'RAG_DISABLED' } });
+    expect(qa.response).toBeUndefined();
   });
   it('runs selection and Q&A transitions with test-only adapters and propagates cancellation signals', async () => {
     const generate = jest

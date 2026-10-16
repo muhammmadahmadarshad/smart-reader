@@ -150,12 +150,12 @@ describe('Annotations: PostgreSQL authorization, validation and concurrency', ()
       builder.prepare(owner, { ...input, bookId: second, documentVersion: second }),
     ).rejects.toThrow('Annotation not found');
     await request(app.getHttpServer()).get('/api/ai/capabilities').expect(401);
-    expect((await req('get', '/ai/capabilities').expect(200)).body).toEqual({
+    expect((await req('get', '/ai/capabilities').expect(200)).body).toMatchObject({
       generation: false,
       streaming: false,
       embeddings: false,
       retrieval: false,
-      reason: 'PHASE_5_DISABLED',
+      reason: expect.any(String),
     });
     for (const route of ['/ai/generate', '/ai/retrieve', '/ai/index'])
       await req('post', route).send({}).expect(404);

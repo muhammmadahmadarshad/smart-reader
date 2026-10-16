@@ -7,6 +7,7 @@ const replacements = {
   'replace-with-local-database-password': db,
   'replace-with-local-storage-password': storage,
   'replace-with-at-least-32-random-characters': randomBytes(32).toString('hex'),
+  'AI_ENCRYPTION_KEYS={}': `AI_ENCRYPTION_KEYS=${JSON.stringify({ v1: randomBytes(32).toString('base64') })}`,
 };
 const rootExists = existsSync('.env');
 if (rootExists && !existsSync('apps/api/.env')) {

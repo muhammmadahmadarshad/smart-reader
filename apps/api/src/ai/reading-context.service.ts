@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 import { BooksService } from '../books/books.service';
@@ -24,6 +25,7 @@ export class ReadingContextService {
     private readonly books: BooksService,
     private readonly annotations: AnnotationsService,
     @Inject(AI_CONFIG) private readonly config: AiConfig,
+    @Optional() @Inject(DataSource) private readonly db?: DataSource,
   ) {}
 
   /** Internal only. userId must come from AuthGuard/current server identity, never a client DTO. */
@@ -144,8 +146,44 @@ export class ReadingContextService {
         'CONTEXT_LIMIT_EXCEEDED',
         'Selected text, question and application instructions exceed the total context limit.',
       );
-    // No authorized extracted-page source exists. Do not call geometry() (which may download a PDF),
-    // providers, storage or extraction to obtain surrounding text. Saved notes remain personal notes.
+    // Reuse a ready, authorized extracted page when available. Never download/extract a PDF here.
+    if (this.db) {
+      const [page] = await this.db.query(
+        `SELECT p.text FROM ai_pages p JOIN ai_indexes i ON i.id=p."indexId" AND i."userId"=p."userId" AND i."bookId"=p."bookId" JOIN books b ON b.id=p."bookId" AND b."userId"=p."userId" WHERE p."userId"=$1 AND p."bookId"=$2 AND p.page=$3 AND p.failed=false AND i."documentVersion"=$2 AND i.active=true AND i.status='READY' AND b.status='READY' LIMIT 1`,
+        [userId, book.id, pages.first],
+      );
+      const at = page ? (page.text as string).indexOf(input.selectedText) : -1;
+      if (at >= 0 && pages.first === pages.last) {
+        const start = Math.max(0, at - Math.floor(this.config.surroundingChars / 2));
+        const surrounding = boundOptionalText(
+          page.text.slice(start),
+          this.config.surroundingChars,
+          this.config.totalChars - context.textLength,
+        );
+        if (surrounding.text) {
+          context.bookExcerpts.push({
+            text: surrounding.text,
+            source: {
+              sourceType: 'BOOK_TEXT',
+              bookId: book.id,
+              documentVersion: book.id,
+              sourceTitle: book.title,
+              pages: { first: pages.first, last: pages.first },
+            },
+            loadedFrom: 'DATABASE',
+            provenance: 'EXTRACTED_DOCUMENT',
+            verifiedDocumentText: true,
+            trust: 'UNTRUSTED_CONTENT',
+          });
+          context.textLength += surrounding.text.length;
+          context.limitations = context.limitations.filter(
+            (x) => x !== 'SURROUNDING_TEXT_UNAVAILABLE',
+          );
+          if (surrounding.truncated || start > 0)
+            context.limitations.push('SURROUNDING_TEXT_TRUNCATED');
+        }
+      }
+    }
     if (annotation?.noteText) {
       const bounded = boundOptionalText(
         annotation.noteText,

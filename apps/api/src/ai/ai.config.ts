@@ -1,8 +1,8 @@
 export const AI_CONFIG = Symbol('AI_CONFIG');
 export type AiConfig = {
-  enabled: false;
-  provider: 'disabled';
-  ragEnabled: false;
+  enabled: boolean;
+  provider: 'disabled' | 'user';
+  ragEnabled: boolean;
   selectedChars: number;
   surroundingChars: number;
   questionChars: number;
@@ -19,18 +19,15 @@ export function readAiConfig(env: Record<string, unknown>): AiConfig {
     'LANGCHAIN_VERBOSE',
   ]) {
     if (env[key] !== undefined && env[key] !== 'false' && env[key] !== false)
-      throw new Error(
-        `${key} must be false; external tracing of private context is unsupported in Phase 5.`,
-      );
+      throw new Error(`${key} must be false; external tracing of private context is unsupported.`);
   }
   for (const key of ['AI_ENABLED', 'RAG_ENABLED']) {
     const value = env[key] ?? 'false';
-    if (value === 'true' || value === true)
-      throw new Error(`${key}=true is unsupported in Phase 5; AI and RAG must remain disabled.`);
-    if (value !== 'false' && value !== false) throw new Error(`${key} must be false in Phase 5.`);
+    if (!['true', 'false', true, false].includes(value as string))
+      throw new Error(`${key} must be true or false.`);
   }
-  if ((env.AI_PROVIDER ?? 'disabled') !== 'disabled')
-    throw new Error('AI_PROVIDER must be disabled in Phase 5.');
+  if (!['disabled', 'user'].includes(String(env.AI_PROVIDER ?? 'user')))
+    throw new Error('AI_PROVIDER must be user or disabled; no project LLM fallback is supported.');
   const integer = (key: string, fallback: number, min = 1) => {
     const raw = env[key] ?? fallback;
     const value = Number(raw);
@@ -45,9 +42,9 @@ export function readAiConfig(env: Record<string, unknown>): AiConfig {
     return value;
   };
   const config: AiConfig = {
-    enabled: false,
-    provider: 'disabled',
-    ragEnabled: false,
+    enabled: env.AI_ENABLED === 'true' || env.AI_ENABLED === true,
+    provider: env.AI_PROVIDER === 'disabled' ? 'disabled' : 'user',
+    ragEnabled: env.RAG_ENABLED === 'true' || env.RAG_ENABLED === true,
     selectedChars: integer('AI_CONTEXT_SELECTION_CHARS', 10000),
     surroundingChars: integer('AI_CONTEXT_SURROUNDING_CHARS', 4000, 0),
     questionChars: integer('AI_CONTEXT_QUESTION_CHARS', 2000),

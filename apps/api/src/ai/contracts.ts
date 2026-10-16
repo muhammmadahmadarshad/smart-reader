@@ -94,6 +94,8 @@ export type GenerationEvent =
   | { type: 'text_delta'; text: string }
   | {
       type: 'completed';
+      provider?: string;
+      model?: string;
       content: string;
       finishReason: 'stop' | 'output_limit';
       usage?: ProviderUsage;
@@ -101,11 +103,12 @@ export type GenerationEvent =
   | { type: 'cancelled'; partialContent?: string; usage?: ProviderUsage }
   | { type: 'failed'; error: AiErrorState; usage?: ProviderUsage };
 export type AiCapabilities = {
-  generation: false;
-  streaming: false;
-  embeddings: false;
-  retrieval: false;
-  reason: 'PHASE_5_DISABLED';
+  generation: boolean;
+  streaming: boolean;
+  embeddings: boolean;
+  retrieval: boolean;
+  connectionsEnabled?: boolean;
+  reason: string | null;
 };
 export type UsageMetadata = {
   requestId: string;
